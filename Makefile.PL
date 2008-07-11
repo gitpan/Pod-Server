@@ -11,6 +11,8 @@ WriteMakefile (
     'Squatting'           => 0.40,
     'Pod::Simple::HTML'   => 0,
     'HTML::AsSubs'        => 0,
+    'File::Which'         => 0,
+    'Text::VimColor'      => 0,
   },
 );
 

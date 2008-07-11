@@ -1,6 +1,7 @@
 package Pod::Server;
 use base 'Squatting';
-our $VERSION = '1.01';
+use File::Which;
+our $VERSION = '1.03';
 our %CONFIG = (
   background_color         => '#112',
   foreground_color         => 'wheat',
@@ -13,6 +14,7 @@ our %CONFIG = (
   sidebar                  => 'right',
   first                    => 'Squatting',
   title                    => '#',
+  vim                      => which('vim'),
 );
 
 package Pod::Server::Controllers;
@@ -122,12 +124,22 @@ our @C = (
       $v->{path} = [ split('/', $module) ];
       my $pm_file;
       if (exists $perl_modules{$module}) {
-        $pm_file = code_for $perl_modules{$module};
-        $v->{code} = cat $pm_file;
+        $v->{file} = code_for $perl_modules{$module};
+        if ($Pod::Server::CONFIG{vim}) {
+          my $vim    = Text::VimColor->new(file => $v->{file});
+          $v->{code} = $vim->html;
+        } else {
+          $v->{code} = cat $v->{file};
+        }
         $self->render('source');
       } elsif (exists $perl_basepods{$module}) {
-        $pm_file = code_for $perl_basepods{$module};
-        $v->{code} = cat $pm_file;
+        $v->{file} = code_for $perl_basepods{$module};
+        if ($Pod::Server::CONFIG{vim}) {
+          my $vim    = Text::VimColor->new(file => $v->{file});
+          $v->{code} = $vim->html
+        } else {
+          $v->{code} = cat $v->{file};
+        }
         $self->render('source');
       } else {
         $v->{title} = "Pod::Server - $pm";
@@ -171,6 +183,7 @@ use Data::Dump 'pp';
 use HTML::AsSubs;
 use Pod::Simple;
 use Pod::Simple::HTML;
+use Text::VimColor;
 $Pod::Simple::HTML::Perldoc_URL_Prefix = '/';
 
 # the ~literal pseudo-element -- don't entity escape this content
@@ -218,68 +231,66 @@ our @V = (
       @breadcrumb;
     },
 
-    _css => sub {
-      qq|
-        body {
-          background: $C->{background_color};
-          color: $C->{foreground_color};
-          font-family: 'Trebuchet MS', sans-serif;
-          font-size: $C->{font_size};
-        }
-        h1, h2, h3, h4 {
-          margin-left: -1em;
-        }
-        pre {
-          font-size: 9pt;
-          background: $C->{pre_background_color};
-          color: $C->{pre_foreground_color};
-        }
-        code {
-          font-size: 9pt;
-          font-weight: bold;
-          color: $C->{code_foreground_color};
-        }
-        a {
-          color: $C->{a_foreground_color};
-          text-decoration: none;
-        }
-        a:hover {
-          color: $C->{a_hover_foreground_color};
-        }
-        div#menu {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          background: #000;
-          color: #fff;
-          opacity: 0.75;
-        }
-        ul#list {
-          margin-left: -6em;
-          list-style: none;
-        }
-        div#pod {
-          width: 580px;
-          margin: 2em 4em 2em 4em;
-        }
-        div#pod pre {
-          padding: 0.5em;
-          border: 1px solid #444;
-          -moz-border-radius-bottomleft: 7px;
-          -moz-border-radius-bottomright: 7px;
-          -moz-border-radius-topleft: 7px;
-          -moz-border-radius-topright: 7px;
-        }
-        div#pod h1 {
-          font-size: 24pt;
-          border-bottom: 2px solid $C->{a_hover_foreground_color};
-        }
-        div#pod p {
-          line-height: 1.4em;
-        }
-      |;
-    },
+    _css => sub {qq|
+      body {
+        background: $C->{background_color};
+        color: $C->{foreground_color};
+        font-family: 'Trebuchet MS', sans-serif;
+        font-size: $C->{font_size};
+      }
+      h1, h2, h3, h4 {
+        margin-left: -1em;
+      }
+      pre {
+        font-size: 9pt;
+        background: $C->{pre_background_color};
+        color: $C->{pre_foreground_color};
+      }
+      code {
+        font-size: 9pt;
+        font-weight: bold;
+        color: $C->{code_foreground_color};
+      }
+      a {
+        color: $C->{a_foreground_color};
+        text-decoration: none;
+      }
+      a:hover {
+        color: $C->{a_hover_foreground_color};
+      }
+      div#menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #000;
+        color: #fff;
+        opacity: 0.75;
+      }
+      ul#list {
+        margin-left: -6em;
+        list-style: none;
+      }
+      div#pod {
+        width: 580px;
+        margin: 2em 4em 2em 4em;
+      }
+      div#pod pre {
+        padding: 0.5em;
+        border: 1px solid #444;
+        -moz-border-radius-bottomleft: 7px;
+        -moz-border-radius-bottomright: 7px;
+        -moz-border-radius-topleft: 7px;
+        -moz-border-radius-topright: 7px;
+      }
+      div#pod h1 {
+        font-size: 24pt;
+        border-bottom: 2px solid $C->{a_hover_foreground_color};
+      }
+      div#pod p {
+        line-height: 1.4em;
+      }
+    |},
 
     home => sub {
       $HOME ||= div(
@@ -359,13 +370,35 @@ our @V = (
     _source => sub {
       my ($self, $v) = @_;
       hr,
-      h4( a({ href => R('Source', $v->{module} )}, "Source Code for " . Pod::Server::Controllers::code_for($v->{pod_file}) ) );
+      h4(a({ href => R('Source', $v->{module} )}, 
+        "Source Code for " . 
+        Pod::Server::Controllers::code_for($v->{pod_file}) 
+      ));
     },
+
+    _vim_syntax_css => sub {qq|
+      .synComment    { color: #00ccff }
+      .synConstant   { color: #ff00ff }
+      .synIdentifier { color: #008b8b }
+      .synStatement  { color: #ffcc22 ; font-weight: bold }
+      .synPreProc    { color: #a020f0 }
+      .synType       { color: #2e8b57 ; font-weight: bold }
+      .synSpecial    { color: #6a5acd }
+      .synUnderlined { color: #000000 ; text-decoration: underline }
+      .synError      { color: #ffffff ; background: #ff0000 none }
+      .synTodo       { color: #0000ff ; background: #ffff00 none }
+    |},
 
     source => sub {
       my ($self, $v) = @_;
       style("div#pod { width: auto; }"), 
-      pre($v->{code});
+      ($C->{vim}
+        ?
+        ( style(x($self->_vim_syntax_css)), 
+          pre(x($v->{code})) )
+        :
+        ( pre($v->{code}) )
+      )
     },
 
   )
@@ -427,11 +460,13 @@ it felt useful enough to spin off into its own perl module distribution.
 
 I have no regrets about duplicating effort or reinventing the wheel, because
 Pod::Server has a lot of nice little features that aid usability and readability.
-It is also quite configurable.  To see all the options run either of the following:
+It is also quite configurable.  To see all the options run any of the following:
 
   pod_server -h
 
   squatting Pod::Server --show-config
+
+  squatting Pod::Server --show-config | perltidy
 
 =head2 My one regret...
 
@@ -445,6 +480,12 @@ really have to develop the habit of looking.
 =head1 SEE ALSO
 
 L<Squatting>, L<Continuity>, L<Pod::Webserver>
+
+=head2 Pod::Server Source Code
+
+The source code is available at:
+
+  http://github.com/beppu/pod-server/tree/master
 
 =head1 AUTHOR
 
