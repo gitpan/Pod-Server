@@ -1,20 +1,32 @@
 package Pod::Server;
 use base 'Squatting';
 use File::Which;
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 our %CONFIG = (
-  background_color         => '#112',
-  foreground_color         => 'wheat',
-  pre_background_color     => '#000',
-  pre_foreground_color     => '#ccd',
-  code_foreground_color    => '#fff',
-  a_foreground_color       => '#fc4',
-  a_hover_foreground_color => '#fe8',
-  font_size                => '10pt',
-  sidebar                  => 'right',
-  first                    => 'Squatting',
-  title                    => '#',
-  vim                      => which('vim'),
+  background_color          => '#112',
+  foreground_color          => 'wheat',
+  pre_background_color      => '#000',
+  pre_foreground_color      => '#ccd',
+  code_foreground_color     => '#fff',
+  a_foreground_color        => '#fc4',
+  a_hover_foreground_color  => '#fe8',
+  font_size                 => '10pt',
+  sidebar                   => 'right',
+  first                     => 'Squatting',
+  title                     => '#',
+  vim                       => which('vim'),
+  vim_comment               => '#0cf',
+  vim_constant              => '#0fc',
+  vim_identifier            => '#0aa',
+  vim_statement             => '#fc2',
+  vim_preproc               => '#8fc',
+  vim_type                  => '#2e8b57',
+  vim_special               => '#6a5acd',
+  vim_underlined            => '#fff',
+  vim_error_bg              => '#f00',
+  vim_error_fg              => '#fff',
+  vim_todo_bg               => '#fc2',
+  vim_todo_fg               => '#222',
 );
 
 package Pod::Server::Controllers;
@@ -121,8 +133,10 @@ our @C = (
     get => sub {
       my ($self, $module) = @_;
       my $v = $self->v;
-      $v->{path} = [ split('/', $module) ];
+      my $pm = $module; $pm =~ s{/}{::}g;
       my $pm_file;
+      $v->{path} = [ split('/', $module) ];
+      $v->{title} = "$Pod::Server::CONFIG{title} - $pm";
       if (exists $perl_modules{$module}) {
         $v->{file} = code_for $perl_modules{$module};
         if ($Pod::Server::CONFIG{vim}) {
@@ -142,7 +156,6 @@ our @C = (
         }
         $self->render('source');
       } else {
-        $v->{title} = "Pod::Server - $pm";
         $self->render('pod_not_found');
       }
     }
@@ -377,16 +390,16 @@ our @V = (
     },
 
     _vim_syntax_css => sub {qq|
-      .synComment    { color: #00ccff }
-      .synConstant   { color: #ff00ff }
-      .synIdentifier { color: #008b8b }
-      .synStatement  { color: #ffcc22 ; font-weight: bold }
-      .synPreProc    { color: #a020f0 }
-      .synType       { color: #2e8b57 ; font-weight: bold }
-      .synSpecial    { color: #6a5acd }
-      .synUnderlined { color: #000000 ; text-decoration: underline }
-      .synError      { color: #ffffff ; background: #ff0000 none }
-      .synTodo       { color: #0000ff ; background: #ffff00 none }
+      .synComment    { color: $C->{vim_comment} }
+      .synConstant   { color: $C->{vim_constant} }
+      .synIdentifier { color: $C->{vim_identifier} }
+      .synStatement  { color: $C->{vim_statement}  ; font-weight: bold; }
+      .synPreProc    { color: $C->{vim_preproc} }
+      .synType       { color: $C->{vim_type}       ; font-weight: bold; }
+      .synSpecial    { color: $C->{vim_special} }
+      .synUnderlined { color: $C->{vim_underlined} ; text-decoration: underline; }
+      .synError      { color: $C->{vim_error_fg}   ; background: $C->{vim_error_bg}; }
+      .synTodo       { color: $C->{vim_todo_fg}    ; background: $C->{vim_todo_bg};  }
     |},
 
     source => sub {
@@ -449,7 +462,7 @@ little web server that serves documentation for all the locally installed
 RubyGems.  When I was coding in Ruby, I found it really useful to know what
 gems I had installed and how to use their various APIs.
 
-"Why didn't Perl have anything like this?"
+B<"Why didn't Perl have anything like this?">
 
 Well, apparently it did.  If I had searched through CPAN, I might have found
 L<Pod::Webserver> which does the same thing this module does.
@@ -466,7 +479,7 @@ It is also quite configurable.  To see all the options run any of the following:
 
   squatting Pod::Server --show-config
 
-  squatting Pod::Server --show-config | perltidy
+  squatting Pod::Server --show-config | perltidy -i 4
 
 =head2 My one regret...
 
@@ -485,7 +498,7 @@ L<Squatting>, L<Continuity>, L<Pod::Webserver>
 
 The source code is available at:
 
-  http://github.com/beppu/pod-server/tree/master
+L<http://github.com/beppu/pod-server/tree/master>
 
 =head1 AUTHOR
 
