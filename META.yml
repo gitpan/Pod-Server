@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Pod-Server
-version:             1.04
+version:             1.05
 abstract:            a web server for locally installed perl documentation
 license:             mit
 author:              
