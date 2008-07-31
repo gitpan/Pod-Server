@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Pod-Server
-version:             1.05
+version:             1.06
 abstract:            a web server for locally installed perl documentation
 license:             mit
 author:              
@@ -11,7 +11,7 @@ requires:
     File::Which:                   0
     HTML::AsSubs:                  0
     Pod::Simple::HTML:             0
-    Squatting:                     0.4
+    Squatting:                     0.5
     Text::VimColor:                0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
