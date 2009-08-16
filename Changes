@@ -1,0 +1,34 @@
+1.07
+  - mentioned other expressions of the pod web server idea
+    that I've become aware of.
+  - enabled strict and warnings
+  - pass follow_symlinks => 2 to File::Find.
+    Doing so makes ubuntu's mod_perl 2 complain less.
+  - Made Text::VimColor optional
+
+1.06
+  - Fixed the index -> body %3A%3A linking error
+  - updated the README a tiny bit
+  - made compatible with Squatting 0.50
+
+1.05
+  - Defer scanning for POD until init is called.
+  - Scan for binaries installed by module distributions, as well.
+
+1.04
+  - Made vim syntax highlighting colors configurable
+  - Made sure page title was set in source view
+
+1.03
+  - Mentioned git repository at github.com in POD
+  - Added vim syntax highlighting for source code view
+
+1.02 (accidentally skipped release)
+  - Added a Changes file
+
+1.01
+  - Made title configurable
+
+1.00
+  - Initial release
+

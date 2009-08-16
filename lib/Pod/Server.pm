@@ -1,7 +1,9 @@
 package Pod::Server;
+use strict;
+use warnings;
 use base 'Squatting';
 use File::Which;
-our $VERSION = '1.06';
+our $VERSION = '1.07';
 our %CONFIG = (
   background_color          => '#112',
   foreground_color          => 'wheat',
@@ -32,10 +34,16 @@ our %CONFIG = (
 sub init {
   my $app = shift;
   Pod::Server::Controllers::scan();
+  my $have_vim = eval { require Text::VimColor };
+  if (not $have_vim) {
+    $CONFIG{vim} = undef;
+  }
   $app->next::method;
 }
 
 package Pod::Server::Controllers;
+use strict;
+use warnings;
 use Squatting ':controllers';
 use File::Basename;
 use File::Find;
@@ -80,16 +88,16 @@ sub scan {
     my $inc = $_;
     my $pm_or_pod = sub {
       my $m = $File::Find::name;
-      next if -d $m;
-      next unless /\.(pm|pod)$/;
-      next if $already_seen{$m};
+      return if -d $m;
+      return unless /\.(pm|pod)$/;
+      return if $already_seen{$m};
       $already_seen{$m} = 1;
       $m =~ s/$inc//;
       $m =~ s/\.\w*$//;
       $m =~ s{^/}{};
       $perl_modules{$m} = $File::Find::name;
     };
-    find({ wanted => $pm_or_pod, follow_fast => 1 }, $_);
+    find({ wanted => $pm_or_pod, follow_fast => 1, follow_skip => 2 }, $_);
   }
   my %h = map { $_ => 1 } ( keys %perl_modules, keys %perl_basepods);
   @perl_modules  = sort keys %h;
@@ -229,12 +237,13 @@ our @C = (
 );
 
 package Pod::Server::Views;
+use strict;
+use warnings;
 use Squatting ':views';
 use Data::Dump 'pp';
 use HTML::AsSubs;
 use Pod::Simple;
 use Pod::Simple::HTML;
-use Text::VimColor;
 $Pod::Simple::HTML::Perldoc_URL_Prefix = '/';
 
 # the ~literal pseudo-element -- don't entity escape this content
@@ -349,9 +358,9 @@ our @V = (
 
     home => sub {
       $HOME ||= div(
-        a({ href => R(Home),   target => '_top' }, "no frames"),
+        a({ href => R('Home'),   target => '_top' }, "no frames"),
         em(" | "),
-        a({ href => R(Frames), target => '_top' }, "frames"),
+        a({ href => R('Frames'), target => '_top' }, "frames"),
         ul({ id => 'list' },
           li(em(">> Modules <<")),
           (
@@ -521,11 +530,14 @@ gems I had installed and how to use their various APIs.
 B<"Why didn't Perl have anything like this?">
 
 Well, apparently it did.  If I had searched through CPAN, I might have found
-L<Pod::Webserver> which does the same thing this module does.
+L<Pod::Webserver> which does the same thing this module does.  After more
+searching, I might have discovered L<Pod::POM::Web>.  And then just recently,
+L<Pod::Browser> was uploaded to CPAN.  (It's getting kinda crowded here.)
 
-However, I didn't know that at the time, so I ended up writing this module.
-At first, its only purpose was to serve as an example L<Squatting> app, but
-it felt useful enough to spin off into its own perl module distribution.
+However, I didn't know any of this at the time, so I ended up writing this
+module.  At first, its only purpose was to serve as an example L<Squatting>
+app, but it felt useful enough to spin off into its own perl module
+distribution.
 
 I have no regrets about duplicating effort or reinventing the wheel, because
 Pod::Server has a lot of nice little features that aid usability and readability.
@@ -548,7 +560,8 @@ really have to develop the habit of looking.
 
 =head1 SEE ALSO
 
-L<Squatting>, L<Continuity>, L<Pod::Webserver>
+L<Squatting>, L<Continuity>, L<Pod::Webserver>, L<Pod::POM::Web>,
+L<Pod::Browser>
 
 =head2 Pod::Server Source Code
 
