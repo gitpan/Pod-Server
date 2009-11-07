@@ -1,3 +1,6 @@
+1.09
+  - changed default font for verbatim (code block) sections
+
 1.08
   - just playing around w/ ShipIt
   - functionally equivalent to 1.07
