@@ -3,7 +3,10 @@ use strict;
 use warnings;
 use base 'Squatting';
 use File::Which;
-our $VERSION = '1.09';
+our $VERSION = '1.10';
+
+my $vim = which('vim');
+
 our %CONFIG = (
   background_color          => '#112',
   foreground_color          => 'wheat',
@@ -16,7 +19,7 @@ our %CONFIG = (
   sidebar                   => 'right',
   first                     => 'Squatting',
   title                     => '#',
-  vim                       => which('vim'),
+  vim                       => $vim,
   vim_comment               => '#0cf',
   vim_constant              => '#0fc',
   vim_identifier            => '#0aa',
@@ -145,7 +148,7 @@ our @C = (
     get  => sub {
       my ($self) = @_;
       $self->v->{title} = $Pod::Server::CONFIG{title};
-      if ($self->input->{base}) {
+      if (defined $self->input->{base}) {
         $self->v->{base} = 'pod';
       }
       $self->render('home');
@@ -158,6 +161,22 @@ our @C = (
       my ($self) = @_;
       $self->v->{title} = $Pod::Server::CONFIG{title};
       $self->render('_frames');
+    }
+  ),
+
+  C(
+    Rescan => [ '/@rescan' ],
+    get => sub {
+      my ($self) = @_;
+      $Pod::Server::Views::HOME = undef;
+      %already_seen  = ();
+      %perl_basepods = ();
+      %perl_programs = ();
+      @perl_programs = ();
+      %perl_modules  = ();
+      @perl_modules  = ();
+      scan();
+      "OK";
     }
   ),
 
@@ -358,6 +377,7 @@ our @V = (
     |},
 
     home => sub {
+      my ($self, $v) = @_;
       $HOME ||= div(
         a({ href => R('Home'),   target => '_top' }, "no frames"),
         em(" | "),
@@ -557,6 +577,29 @@ existed.  I would've used that to build the list of all the POD on the system
 had I known about it sooner than just now (2008-07-06).  This just goes to show
 that it's hard to know what's on CPAN, let alone your own system.  I guess you
 really have to develop the habit of looking.
+
+
+=head1 API
+
+=head2 Home
+
+=head3 get
+
+=head2 Rescan
+
+=head3 get
+
+=head2 Frames
+
+=head3 get
+
+=head2 Source
+
+=head3 get
+
+=head2 Pod
+
+=head3 get
 
 
 =head1 SEE ALSO
