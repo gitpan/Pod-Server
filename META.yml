@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Pod-Server
-version:            1.11
+version:            1.12
 abstract:           a web server for locally installed perl documentation
 author:
     - John BEPPU <beppu@cpan.org>
@@ -14,7 +14,7 @@ requires:
     File::Which:        0
     HTML::AsSubs:       0
     Pod::Simple::HTML:  0
-    Squatting:          0.6
+    Squatting:          0.81
     Text::VimColor:     0
 no_index:
     directory:
