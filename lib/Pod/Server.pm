@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use Squatting;
 use File::Which;
-our $VERSION = '1.12';
+our $VERSION = '1.13';
+$| = 1;
 
 my $vim = which('vim');
 
@@ -51,6 +52,8 @@ use File::Basename;
 use File::Find;
 use File::Which;
 use Config;
+use aliased 'Pod::Simple::Search';
+use aliased 'Squatting::H';
 
 # skip files we've already seen
 my %already_seen;
@@ -68,12 +71,6 @@ sub scan {
   no warnings;
   warn "scanning for POD...\n";
 
-  %perl_basepods = map {
-    my ($file, $path, $suffix) = fileparse($_, ".pod");
-    $already_seen{$_} = 1;
-    ($file => $_);
-  } glob "$Config{installprivlib}/pod/*.pod";
-
   if ($Config{man1ext} ne "1") {
     %perl_programs = map {
       my ($file, $path, $suffix) = fileparse($_, qr/\.$Config{man1ext}.*$/);
@@ -86,25 +83,32 @@ sub scan {
     );
   }
 
-  for (@INC) {
-    next if $_ eq ".";
-    my $inc = $_;
-    my $pm_or_pod = sub {
-      my $m = $File::Find::name;
-      return if -d $m;
-      return unless /\.(pm|pod)$/;
-      return if $already_seen{$m};
-      $already_seen{$m} = 1;
-      $m =~ s/$inc//;
-      $m =~ s/\.\w*$//;
-      $m =~ s{^/}{};
-      return if $m =~ /^5/;
-      $perl_modules{$m} = $File::Find::name;
-    };
-    find({ wanted => $pm_or_pod, follow_fast => 1, follow_skip => 2 }, $_);
+  my $search = Search->new;
+  $search->limit_glob('*');
+  $search->progress(H->new({
+    reach => sub {
+      print ".";
+    },
+    done => sub {
+      print "\n";
+    },
+  }));
+
+  my $survey;
+  if (scalar(@{$CONFIG{tree}})) {
+    $search->inc(0);
+    $survey = $search->survey(@{$CONFIG{tree}});
   }
-  my %h = map { $_ => 1 } ( keys %perl_modules, keys %perl_basepods);
-  @perl_modules  = sort keys %h;
+  else {
+    $survey = $search->survey;
+  }
+
+  for (keys %$survey) {
+    my $key = $_;
+    $key =~ s/::/\//g;
+    $perl_modules{$key} = $survey->{$_};
+  }
+  @perl_modules  = sort keys %perl_modules;
   @perl_programs = sort keys %perl_programs;
 }
 %already_seen = ();
@@ -319,6 +323,18 @@ our @V = (
       }
       h1, h2, h3, h4 {
         margin-left: -1em;
+        margin-bottom: 4px;
+      }
+      dl {
+        margin: 0;
+        padding: 0;
+      }
+      dt {
+        margin: 1em 0 1em 1em;
+      }
+      dd {
+        margin: -0.75em 0 0 2em;
+        padding: 0;
       }
       em {
         padding: 0.25em;
@@ -362,16 +378,14 @@ our @V = (
       div#pod pre {
         padding: 0.5em;
         border: 1px solid #444;
-        -moz-border-radius-bottomleft: 7px;
-        -moz-border-radius-bottomright: 7px;
-        -moz-border-radius-topleft: 7px;
-        -moz-border-radius-topright: 7px;
+        border-radius: 7px;
       }
       div#pod h1 {
         font-size: 24pt;
         border-bottom: 2px solid $C->{a_hover_foreground_color};
       }
       div#pod p {
+        margin: 0.75em 0 1em 0;
         line-height: 1.4em;
       }
     |},
@@ -431,7 +445,7 @@ our @V = (
       my $out;
       my $pod = Pod::Simple::HTML->new;
       $pod->index(1);
-      $pod->output_string($out);
+      $pod->output_string(\$out);
       $pod->parse_file($v->{pod_file});
       $out =~ s/^.*<!-- start doc -->//s;
       $out =~ s/<!-- end doc -->.*$//s;
@@ -569,14 +583,6 @@ It is also quite configurable.  To see all the options run any of the following:
   squatting Pod::Server --show-config
 
   squatting Pod::Server --show-config | perltidy -i 4
-
-=head2 My one regret...
-
-Well, OK.  I have one regret.  I didn't know that L<Pod::Simple::Search>
-existed.  I would've used that to build the list of all the POD on the system
-had I known about it sooner than just now (2008-07-06).  This just goes to show
-that it's hard to know what's on CPAN, let alone your own system.  I guess you
-really have to develop the habit of looking.
 
 
 =head1 API

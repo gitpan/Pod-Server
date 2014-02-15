@@ -1,26 +1,28 @@
---- #YAML:1.0
-name:               Pod-Server
-version:            1.12
-abstract:           a web server for locally installed perl documentation
+---
+abstract: 'a web server for locally installed perl documentation'
 author:
-    - John BEPPU <beppu@cpan.org>
-license:            mit
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
+  - 'John BEPPU <beppu@cpan.org>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    File::Which:        0
-    HTML::AsSubs:       0
-    Pod::Simple::HTML:  0
-    Squatting:          0.81
-    Text::VimColor:     0
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.56
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.130870'
+license: mit
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Pod-Server
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  File::Which: 0
+  HTML::AsSubs: 0
+  Pod::Simple::HTML: 0
+  Pod::Simple::Search: 0
+  Squatting: 0.81
+  Text::VimColor: 0
+  aliased: 0
+version: 1.13
