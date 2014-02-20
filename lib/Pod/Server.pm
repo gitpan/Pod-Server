@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Squatting;
 use File::Which;
-our $VERSION = '1.13';
+our $VERSION = '1.14';
 $| = 1;
 
 my $vim = which('vim');
@@ -20,6 +20,7 @@ our %CONFIG = (
   sidebar                   => 'right',
   first                     => 'Squatting',
   title                     => '#',
+  tree                      => [],
   vim                       => $vim,
   vim_comment               => '#0cf',
   vim_constant              => '#0fc',

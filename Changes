@@ -1,3 +1,6 @@
+1.14 Wed Feb 19 19:12:47 PST 2014
+  - gave --tree option a default value of [] so Squatting::On::PSGI doesn't crash
+
 1.13 Sat Feb 15 11:49:24 PST 2014
   - added --tree <DIR> option which lets you
     specify more directories to search for perl modules.
